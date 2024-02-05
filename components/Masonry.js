@@ -1,4 +1,4 @@
-import { View, ListView, Image, Text, Dimensions } from 'react-native';
+import { View, FlatList, Image, Text, Dimensions } from 'react-native';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Task from 'data.task';
@@ -10,11 +10,11 @@ import Column from './Column';
 import styles from '../styles/main';
 
 // assignObjectColumn :: Number -> [Objects] -> [Objects]
-export const assignObjectColumn = (nColumns, index, targetObject) => ({...targetObject, ...{ column: index % nColumns }});
+export const assignObjectColumn = (nColumns, index, targetObject) => ({ ...targetObject, ...{ column: index % nColumns } });
 
 // Assigns an `index` property` from bricks={data}` for later sorting.
 // assignObjectIndex :: (Number, Object) -> Object
-export const assignObjectIndex = (index, targetObject) => ({...targetObject, ...{ index }});
+export const assignObjectIndex = (index, targetObject) => ({ ...targetObject, ...{ index } });
 
 // findMinIndex :: [Numbers] -> Number
 export const findMinIndex = (srcArray) => srcArray.reduce((shortest, cValue, cIndex, cArray) => (cValue < cArray[shortest]) ? cIndex : shortest, 0);
@@ -111,7 +111,7 @@ export default class Masonry extends Component {
 			const offSet = this.props.bricks.length;
 			this.setState({
 				_uniqueCount
-			}, this.resolveBricks({...nextProps, bricks: brickDiff}, offSet));
+			}, this.resolveBricks({ ...nextProps, bricks: brickDiff }, offSet));
 		}
 	}
 
@@ -158,7 +158,7 @@ export default class Masonry extends Component {
 
 	_setParentDimensions(event) {
 		// Currently height isn't being utilized, but will pass through for future features
-		const {width, height} = event.nativeEvent.layout;
+		const { width, height } = event.nativeEvent.layout;
 
 		this.setState({
 			dimensions: {
@@ -180,21 +180,21 @@ export default class Masonry extends Component {
 		let columnIndex;
 
 		switch (priority) {
-		case PRIORITY_BALANCE:
-			// Column width only valid in case priority is balance
-			// Best effort to balance but sometimes state changes may have delays when performing calculation
-			columnIndex = findMinIndex(_columnHeights);
-			const heightsCopy = _columnHeights.slice();
-			const newColumnHeights = heightsCopy[columnIndex] + (columnWidth * resolvedBrick.dimensions.height / resolvedBrick.dimensions.width);
-			heightsCopy[columnIndex] = newColumnHeights;
-			this.setState({
-				_columnHeights: heightsCopy
-			});
-			break;
-		case PRIORITY_ORDER:
-		default:
-			columnIndex = resolvedBrick.column;
-			break;
+			case PRIORITY_BALANCE:
+				// Column width only valid in case priority is balance
+				// Best effort to balance but sometimes state changes may have delays when performing calculation
+				columnIndex = findMinIndex(_columnHeights);
+				const heightsCopy = _columnHeights.slice();
+				const newColumnHeights = heightsCopy[columnIndex] + (columnWidth * resolvedBrick.dimensions.height / resolvedBrick.dimensions.width);
+				heightsCopy[columnIndex] = newColumnHeights;
+				this.setState({
+					_columnHeights: heightsCopy
+				});
+				break;
+			case PRIORITY_ORDER:
+			default:
+				columnIndex = resolvedBrick.column;
+				break;
 		}
 
 		const column = dataSet[columnIndex];
@@ -216,7 +216,7 @@ export default class Masonry extends Component {
 		return dataCopy;
 	};
 
-  _delayCallEndReach = () => {
+	_delayCallEndReach = () => {
 		const sortedData = this.state._sortedData;
 		const sortedLength = sortedData.reduce((acc, cv) => cv.length + acc, 0);
 		// Limit the invokes to only when the masonry has
@@ -228,28 +228,26 @@ export default class Masonry extends Component {
 
 	render() {
 		return (
-		<View style={{flex: 1}} onLayout={(event) => this._setParentDimensions(event)}>
-		<ListView
-			contentContainerStyle={styles.masonry__container}
-			dataSource={this.state.dataSource}
-			enableEmptySections
-			scrollRenderAheadDistance={100}
-			removeClippedSubviews={false}
-			onEndReached={this._delayCallEndReach}
-			onEndReachedThreshold={this.props.onEndReachedThreshold}
-			renderRow={(data, sectionId, rowID) => (
-			<Column
-				data={data}
-				columns={this.props.columns}
-				parentDimensions={this.state.dimensions}
-				imageContainerStyle={this.props.imageContainerStyle}
-				customImageComponent={this.props.customImageComponent}
-				customImageProps={this.props.customImageProps}
-				spacing={this.props.spacing}
-				key={`RN-MASONRY-COLUMN-${rowID}`} />
-			)}
-			refreshControl={this.props.refreshControl} />
-		</View>
+			<View style={{ flex: 1 }} onLayout={(event) => this._setParentDimensions(event)}>
+				<FlatList
+					contentContainerStyle={styles.masonry__container}
+					data={this.state.dataSource}
+					removeClippedSubviews={false}
+					onEndReached={this._delayCallEndReach}
+					onEndReachedThreshold={this.props.onEndReachedThreshold}
+					renderItem={(data, rowID) => (
+						<Column
+							data={data}
+							columns={this.props.columns}
+							parentDimensions={this.state.dimensions}
+							imageContainerStyle={this.props.imageContainerStyle}
+							customImageComponent={this.props.customImageComponent}
+							customImageProps={this.props.customImageProps}
+							spacing={this.props.spacing}
+							key={`RN-MASONRY-COLUMN-${rowID}`} />
+					)}
+					refreshControl={this.props.refreshControl} />
+			</View>
 		);
 	}
 };
